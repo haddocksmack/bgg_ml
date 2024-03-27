@@ -13,7 +13,7 @@ def kfold_validate(X_df, y_df, num_folds=8):
     :param y_df: y dataframe, usually y_train
     :param num_folds: number of folds used in KFolds()
 
-    :return: numpy array containing predicitons from Linear Regression
+    :return: numpy array containing predictions from Linear Regression
              K-Fold Cross Validation
     """
     cv = KFold(n_splits=num_folds)

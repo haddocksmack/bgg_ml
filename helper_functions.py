@@ -1,11 +1,11 @@
 import pandas as pd
 import numpy as np
 
-from sklearn.model_selection import KFold, cross_val_predict
+from sklearn.model_selection import KFold, cross_val_predict, cross_val_score
 from sklearn.linear_model import LinearRegression
 
 
-def kfold_validate(X_df, y_df, num_folds=8):
+def kfold_validate_pred(X_df, y_df, num_folds=8):
     """
     Perform k-fold cross validation and return predictions
 
@@ -31,6 +31,31 @@ def kfold_validate(X_df, y_df, num_folds=8):
     return preds
 
 
+def kfold_validate_score(X_df, y_df, num_folds=8, model=LinearRegression()):
+    """
+    Perform k-fold cross validation and returns mean RSME of CV
+
+    :param X_df: X dataframe, usually X_train
+    :param y_df: y dataframe, usually y_train
+    :param num_folds: number of folds used in KFolds()
+    :param model: Regression model chosen
+
+    :return: numpy array containing predictions from Linear Regression
+             K-Fold Cross Validation
+    """
+    scores = -1 * cross_val_score(
+        model,
+        X_df,
+        y_df,
+        scoring='neg_mean_squared_error',
+        cv=KFold(n_splits=num_folds)
+    )
+
+    avg_rmse = np.mean(np.sqrt(scores))
+
+    return avg_rmse
+
+
 def find_outlier_games(X_df, y_df, name_df, num_folds=8):
     """
     Use kfold_validate() to return list of games that return
@@ -44,7 +69,7 @@ def find_outlier_games(X_df, y_df, name_df, num_folds=8):
     :return: dictionary that contains outlier prediction,
              in the format {"Name of Game": prediction value}
     """
-    preds = kfold_validate(X_df, y_df, num_folds)
+    preds = kfold_validate_pred(X_df, y_df, num_folds)
 
     outliers = {}
 

@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 from sklearn.model_selection import KFold, cross_val_predict, cross_val_score
 from sklearn.linear_model import LinearRegression
@@ -83,3 +84,33 @@ def find_outlier_games(X_df, y_df, name_df, num_folds=8):
             outliers[game] = pred
 
     return outliers
+
+
+def var_plot(pca, scree=True):
+    """
+    Takes a data frame and pca value and generates a plot
+    to show variance accounted for by principle components.
+
+    :param pca: PCA object
+    :param scree: True for scree plot, False for simple bar graph
+
+    :return: none
+    """
+
+    var_ratio = pca.explained_variance_ratio_
+    num_components = np.arange(len(var_ratio))
+    cum_vals = np.cumsum(var_ratio)
+
+    plt.figure(figsize=(15, 6))
+    ax = plt.subplot(111)
+
+    ax.bar(num_components, var_ratio)
+    if scree:
+        ax.plot(num_components, cum_vals, color='r')
+
+    ax.xaxis.set_tick_params(width=0)
+    ax.yaxis.set_tick_params(width=2, length=12)
+
+    ax.set_xlabel("Principal Component")
+    ax.set_ylabel("Variance Explained (%)")
+    plt.title('Explained Variance Per Principal Component')

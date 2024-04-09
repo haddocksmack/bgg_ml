@@ -4,9 +4,10 @@ import matplotlib.pyplot as plt
 
 from sklearn.model_selection import KFold, cross_val_predict, cross_val_score
 from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
 
 
-def kfold_validate_pred(X_df, y_df, num_folds=8):
+def kfold_validate_pred(X_df, y_df, model, num_folds=8):
     """
     Perform k-fold cross validation and return predictions
 
@@ -18,8 +19,6 @@ def kfold_validate_pred(X_df, y_df, num_folds=8):
              K-Fold Cross Validation
     """
     cv = KFold(n_splits=num_folds)
-
-    model = LinearRegression()
 
     # Generate predictions from the cross validation
     preds = cross_val_predict(
@@ -44,15 +43,15 @@ def kfold_validate_score(X_df, y_df, num_folds=8, model=LinearRegression()):
     :return: numpy array containing predictions from Linear Regression
              K-Fold Cross Validation
     """
-    scores = -1 * cross_val_score(
+    training = -1 * cross_val_score(
         model,
         X_df,
         y_df,
-        scoring='neg_mean_squared_error',
+        scoring='neg_root_mean_squared_error',
         cv=KFold(n_splits=num_folds)
-    )
+    ).mean()
 
-    avg_rmse = np.mean(np.sqrt(scores))
+    avg_rmse = mean_squared_error(y_df, model.predict(X_df), squared=False)
 
     return avg_rmse
 

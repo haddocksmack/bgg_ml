@@ -39,8 +39,8 @@ def print_scores(r2, rmse, model_name=None):
     """
     if model_name:
         print(f'{model_name}:\n')
-    print(f'R-squared:     {r2}')
-    print(f'RMSE:          {rmse}')
+    print(f'R-squared:     {r2:.4}')
+    print(f'RMSE:          {rmse:.4}')
 
 
 def kfold_validate_pred(X_df, y_df, model, num_folds=8):
@@ -79,17 +79,27 @@ def kfold_validate_score(X_df, y_df, num_folds=8, model=LinearRegression()):
     :return: numpy array containing predictions from Linear Regression
              K-Fold Cross Validation
     """
-    training = -1 * cross_val_score(
-        model,
-        X_df,
-        y_df,
-        scoring='neg_root_mean_squared_error',
-        cv=KFold(n_splits=num_folds)
-    ).mean()
+    avg_r2 = np.mean(
+            -1 * cross_val_score(
+            model,
+            X_df,
+            y_df,
+            scoring='r2',
+            cv=KFold(n_splits=num_folds)
+        )
+    )
 
-    avg_rmse = mean_squared_error(y_df, model.predict(X_df), squared=False)
+    avg_rmse = np.mean(
+            -1 * cross_val_score(
+            model,
+            X_df,
+            y_df,
+            scoring='neg_root_mean_squared_error',
+            cv=KFold(n_splits=num_folds)
+        )
+    )
 
-    return avg_rmse
+    return avg_r2, avg_rmse
 
 
 def find_outlier_games(X_df, y_df, name_df, num_folds=8):

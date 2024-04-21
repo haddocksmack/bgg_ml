@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import KFold, cross_val_predict, cross_val_score
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.decomposition import PCA
+from sklearn.cross_decomposition import PLSRegression
 
 
 def full_training_set_scores(X_df, y_df, model):
@@ -102,35 +104,6 @@ def kfold_validate_score(X_df, y_df, num_folds=8, model=LinearRegression()):
     return avg_r2, avg_rmse
 
 
-def find_outlier_games(X_df, y_df, name_df, num_folds=8):
-    """
-    Use kfold_validate() to return list of games that return
-    predictions that are outliers
-
-    :param X_df: X dataframe, usually X_train
-    :param y_df: y dataframe, usually y_train
-    :param name_df: dataframe containing indexed names
-    :param num_folds: number of folds used in KFolds()
-
-    :return: dictionary that contains outlier prediction,
-             in the format {"Name of Game": prediction value}
-    """
-    preds = kfold_validate_pred(X_df, y_df, num_folds)
-
-    outliers = {}
-
-    for pred in list(preds):
-        # acceptable range: -20 < pred < 20
-        if pred > 20.0 or pred < -20.0:
-            # Get index of outlier game
-            outlier_idx = X_df.iloc[[list(preds).index(pred)]].index[0]
-            # Get name fo outlier game
-            game = name_df.loc[outlier_idx][0]
-            outliers[game] = pred
-
-    return outliers
-
-
 def var_plot(pca, scree=True):
     """
     Takes a data frame and pca value and generates a plot
@@ -159,3 +132,103 @@ def var_plot(pca, scree=True):
     ax.set_xlabel("Principal Component")
     ax.set_ylabel("Variance Explained (%)")
     plt.title('Explained Variance Per Principal Component')
+
+
+def component_reduction(X_df, y_df, model, max_components=50, pca=True):
+    """
+    Use PCA or PLS to return list with average RMSE for all number of components tested
+
+    :param X_df: dataframe, usually X_train
+    :param y_df: dataframe, usually y_train
+    :param model: object, Regression model chosen
+    :param max_components: int, Maximum number of components
+    :param pca: bool, True: Fit PCA; False: Fit PLS
+
+    :return:
+    """
+    # Fit for PCA
+    if pca:
+        comp_reduction = PCA(random_state=42)
+
+        X_reduced = comp_reduction.fit_transform(X_df)
+
+        avg_rmses = []
+
+        # Check the first 25 principle components for RMSE
+        for i in np.arange(1, max_components+1):
+            # Resets model
+            curr_model = model
+            _, rmse = kfold_validate_score(X_reduced[:, :i], y_df, model=curr_model)
+            avg_rmses.append(rmse)
+
+    # Fit for PLS
+    else:
+        avg_rmses = []
+
+        for i in np.arange(1, max_components+1):
+            pls = PLSRegression(n_components=i)
+
+            # Fit and transform
+            X_train_pls = pls.fit(X_df, y_df)
+            X_train_pls = pls.transform(X_df)
+
+            curr_model = model
+
+            _, rmse = kfold_validate_score(X_train_pls, y_df, model=curr_model)
+
+            avg_rmses.append(rmse)
+
+    return avg_rmses
+
+
+def plot_components(primary_rmses, secondary_rmses=None, baselines=None):
+    """
+
+    :param primary_rmses:
+    :param secondary_rmses:
+    :param baselines:
+    :return:
+    """
+    colors = ['r', 'grey', 'pink', 'purple']
+    # var to iterate through color
+    color = 0
+
+    # plot primary rmses
+    plt.plot(primary_rmses, color='blue')
+
+    # plot secondary rmses if any
+    if secondary_rmses:
+        plt.plot(primary_rmses, color='orange')
+        plt.title(f'{primary_rmses} vs. {secondary_rmses}')
+    else:
+        plt.title(f'{primary_rmses}')
+
+    # add baselines if any
+    if baselines:
+        for key, val in baselines.items():
+            plt.axhline(val, color=colors[color], label=f'{key} baseline')
+            # increment color var
+            color += 1
+
+        plt.legend()
+
+    plt.xlabel('Number of Components')
+    plt.ylabel('Average RMSE');
+
+
+def add_baselines(baselines):
+    """
+
+    :param baselines:
+    :return:
+    """
+    colors = ['r', 'grey', 'pink', 'purple']
+    # var to iterate through color
+    color = 0
+
+    for key, val in baselines.items():
+        plt.axhline(val, color=colors[color], label=f'{key} baseline')
+        # increment color var
+        color += 1
+
+    plt.legend()

@@ -70,30 +70,6 @@ def print_scores(r2, rmse, model_name=None):
     print(f'RMSE:          {rmse:.4}')
 
 
-def kfold_validate_pred(X_df, y_df, model, num_folds=8):
-    """
-    Perform k-fold cross validation and return predictions
-
-    :param X_df: X dataframe, usually X_train
-    :param y_df: y dataframe, usually y_train
-    :param num_folds: number of folds used in KFolds()
-
-    :return: numpy array containing predictions from Linear Regression
-             K-Fold Cross Validation
-    """
-    cv = KFold(n_splits=num_folds)
-
-    # Generate predictions from the cross validation
-    preds = cross_val_predict(
-        model,
-        X_df,
-        y_df,
-        cv=cv
-    )
-
-    return preds
-
-
 def kfold_validate_score(X_df, y_df, num_folds=8, model=LinearRegression()):
     """
     Perform k-fold cross validation and returns mean RSME of CV
@@ -173,7 +149,7 @@ def component_reduction(X_df, y_df, model, max_components=50, pca=True):
     """
     # Fit for PCA
     if pca:
-        comp_reduction = PCA(random_state=42)
+        comp_reduction = PCA(random_state=37)
 
         X_reduced = comp_reduction.fit_transform(X_df)
 
@@ -206,46 +182,13 @@ def component_reduction(X_df, y_df, model, max_components=50, pca=True):
     return avg_rmses
 
 
-def plot_components(primary_rmses, secondary_rmses=None, baselines=None):
-    """
-
-    :param primary_rmses:
-    :param secondary_rmses:
-    :param baselines:
-    :return:
-    """
-    colors = ['r', 'grey', 'pink', 'purple']
-    # var to iterate through color
-    color = 0
-
-    # plot primary rmses
-    plt.plot(primary_rmses, color='blue')
-
-    # plot secondary rmses if any
-    if secondary_rmses:
-        plt.plot(primary_rmses, color='orange')
-        plt.title(f'{primary_rmses} vs. {secondary_rmses}')
-    else:
-        plt.title(f'{primary_rmses}')
-
-    # add baselines if any
-    if baselines:
-        for key, val in baselines.items():
-            plt.axhline(val, color=colors[color], label=f'{key} baseline')
-            # increment color var
-            color += 1
-
-        plt.legend()
-
-    plt.xlabel('Number of Components')
-    plt.ylabel('Average RMSE');
-
-
 def add_baselines(baselines):
     """
+    Plots baseline values
 
-    :param baselines:
-    :return:
+    :param baselines: dictionary, dict of {baseline: RMSE score}
+
+    :return: None
     """
     colors = ['r', 'grey', 'pink', 'purple']
     # var to iterate through color

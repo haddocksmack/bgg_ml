@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from sklearn.model_selection import KFold, cross_val_predict, cross_val_score
+from sklearn.model_selection import KFold, cross_val_score
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.decomposition import PCA
@@ -11,7 +11,8 @@ from sklearn.cross_decomposition import PLSRegression
 
 def rename_columns(df, df_name):
     """
-    Adds the dataframe name to column names. This helps with analyzing features later
+    Adds the dataframe name to column names.
+    This helps with analyzing features later
 
     :param df: dataframe object, dataframe to rename columns
     :param df_name: str, name of dataframe
